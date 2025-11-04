@@ -1,0 +1,33 @@
+---
+# Common variables for all hosts
+
+# Docker settings
+docker_version: "latest"
+docker_compose_version: "2.23.3"
+
+# k3s settings
+k3s_version: "latest"  # or specify version like "v1.28.4+k3s1"
+k3s_install_options:
+  - "--write-kubeconfig-mode 644"
+  - "--disable traefik"  # Optional: disable traefik for training
+  - "--kubelet-arg=kube-reserved=cpu=200m,memory=256Mi"
+  - "--kubelet-arg=system-reserved=cpu=200m,memory=256Mi"
+
+# Project settings
+project_repo: "https://github.com/YOUR_USERNAME/ssboard.git"
+project_dir: "/home/{{ ansible_user }}/ssboard"
+
+# Docker Hub settings (for pre-pulling images)
+dockerhub_username: "YOUR_DOCKERHUB_USERNAME"
+
+# Pre-pull images for faster startup
+docker_images_to_pull:
+  - "postgres:15-alpine"
+  - "gradle:8.5-jdk21"
+  - "node:21-alpine"
+  - "eclipse-temurin:21-jre-alpine"
+
+# System settings
+disable_swap: true
+timezone: "Asia/Seoul"
+

@@ -1,0 +1,124 @@
+---
+- name: Setup Docker and k3s for Training
+  hosts: all
+  become: yes
+  gather_facts: yes
+  
+  pre_tasks:
+    - name: Display target host information
+      debug:
+        msg: "Setting up {{ inventory_hostname }} ({{ ansible_host }})"
+    
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+    
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+      tags: upgrade
+    
+    - name: Install basic packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - software-properties-common
+          - git
+          - wget
+          - vim
+          - htop
+          - net-tools
+          - jq
+          - python3-pip
+        state: present
+    
+    - name: Set timezone
+      timezone:
+        name: "{{ timezone }}"
+      when: timezone is defined
+
+  roles:
+    - docker
+    - k3s
+  
+  post_tasks:
+    - name: Clone project repository
+      git:
+        repo: "{{ project_repo }}"
+        dest: "{{ project_dir }}"
+        version: main
+        force: yes
+      become_user: "{{ ansible_user }}"
+      when: project_repo is defined and project_repo != "https://github.com/YOUR_USERNAME/ssboard.git"
+      tags: project
+    
+    - name: Create .env file from example
+      copy:
+        src: "{{ project_dir }}/.env.example"
+        dest: "{{ project_dir }}/.env"
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+      when: project_repo is defined and project_repo != "https://github.com/YOUR_USERNAME/ssboard.git"
+      tags: project
+    
+    - name: Pull Docker images for faster startup
+      docker_image:
+        name: "{{ item }}"
+        source: pull
+      loop: "{{ docker_images_to_pull }}"
+      ignore_errors: yes
+      tags: images
+    
+    - name: Create .kube directory for user
+      file:
+        path: "/home/{{ ansible_user }}/.kube"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+    
+    - name: Copy kubeconfig to user home
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "/home/{{ ansible_user }}/.kube/config"
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0600'
+    
+    - name: Add kubectl alias to bashrc
+      lineinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        line: "alias k='kubectl'"
+        create: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+    
+    - name: Add KUBECONFIG environment variable
+      lineinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        line: "export KUBECONFIG=/home/{{ ansible_user }}/.kube/config"
+        create: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+    
+    - name: Display completion message
+      debug:
+        msg: |
+          ========================================
+          Setup completed on {{ inventory_hostname }}!
+          - Docker version: installed
+          - k3s version: installed
+          - Project directory: {{ project_dir }}
+          - SSH to VM and run: kubectl get nodes
+          ========================================
+

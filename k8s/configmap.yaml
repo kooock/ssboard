@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: board-config
+  namespace: board
+data:
+  # Database configuration
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "boarddb"
+  DB_USER: "admin"
+  
+  # API URL for frontend (should be updated with actual domain/IP)
+  NEXT_PUBLIC_API_URL: "http://backend-service:8080"
+

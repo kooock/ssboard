@@ -1,0 +1,39 @@
+# Backend (Gradle + Java)
+backend/.gradle/
+backend/build/
+backend/out/
+backend/*.class
+backend/*.log
+backend/.idea/
+backend/*.iml
+
+# Frontend (Node.js + Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/.env*.local
+frontend/*.log
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+# Docker
+*.log
+
+# Kubernetes
+k8s/.env
+

@@ -1,0 +1,116 @@
+---
+- name: Check current swap status
+  command: swapon --show
+  register: swap_status
+  changed_when: false
+  failed_when: false
+
+- name: Disable swap
+  command: swapoff -a
+  when: 
+    - disable_swap | default(true)
+    - swap_status.stdout | length > 0
+
+- name: Remove swap from /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '.*swap.*'
+    state: absent
+  when: disable_swap | default(true)
+
+- name: Check if k3s is already installed
+  stat:
+    path: /usr/local/bin/k3s
+  register: k3s_installed
+
+- name: Get current k3s version if installed
+  command: k3s --version
+  register: k3s_current_version
+  when: k3s_installed.stat.exists
+  changed_when: false
+  ignore_errors: yes
+
+- name: Display current k3s version
+  debug:
+    msg: "Current k3s version: {{ k3s_current_version.stdout }}"
+  when: k3s_installed.stat.exists and k3s_current_version is defined
+
+- name: Install or update k3s
+  shell: |
+    curl -sfL https://get.k3s.io | sh -s - \
+      {{ k3s_install_options | join(' ') }}
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version if k3s_version != 'latest' else '' }}"
+  register: k3s_install_result
+
+- name: Wait for k3s.yaml to be created
+  wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    timeout: 300
+
+- name: Set k3s.yaml permissions
+  file:
+    path: /etc/rancher/k3s/k3s.yaml
+    mode: '0644'
+
+- name: Start and enable k3s service
+  systemd:
+    name: k3s
+    state: started
+    enabled: yes
+
+- name: Wait for k3s to be ready
+  command: kubectl wait --for=condition=Ready nodes --all --timeout=300s
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+  retries: 10
+  delay: 10
+  register: k3s_ready
+  until: k3s_ready is succeeded
+
+- name: Get k3s version
+  command: k3s --version
+  register: k3s_version_output
+  changed_when: false
+
+- name: Display k3s version
+  debug:
+    msg: "k3s installed: {{ k3s_version_output.stdout }}"
+
+- name: Get kubectl version
+  command: kubectl version --client
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: kubectl_version_output
+  changed_when: false
+
+- name: Display kubectl version
+  debug:
+    msg: "kubectl version: {{ kubectl_version_output.stdout }}"
+
+- name: Install kubectl completion for bash
+  shell: kubectl completion bash > /etc/bash_completion.d/kubectl
+  args:
+    creates: /etc/bash_completion.d/kubectl
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+- name: Install k alias for kubectl
+  lineinfile:
+    path: /etc/profile.d/kubectl_alias.sh
+    line: "alias k='kubectl'"
+    create: yes
+    mode: '0644'
+
+- name: Verify k3s cluster status
+  command: kubectl get nodes
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: k3s_nodes
+  changed_when: false
+
+- name: Display k3s cluster nodes
+  debug:
+    msg: "{{ k3s_nodes.stdout_lines }}"
+
