@@ -35,6 +35,7 @@ public class Post {
     private User author;
     
     @Column(nullable = false)
+    @Builder.Default
     private Long viewCount = 0L;
     
     @CreatedDate
