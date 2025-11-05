@@ -1,17 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  
-  async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://backend:8080';
-    
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
-  },
+  // API proxy is now handled by app/api/[...path]/route.ts
+  // This allows BACKEND_URL to be read at runtime, not build time
 }
 
 module.exports = nextConfig
