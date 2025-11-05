@@ -22,6 +22,10 @@ export default function LoginPage() {
       const response = await auth.login(username, password);
       const { token, username: user, email } = response.data;
       setAuth(token, user, email);
+      
+      // 로그인 이벤트 발생
+      window.dispatchEvent(new Event('auth-changed'));
+      
       router.push('/');
       router.refresh();
     } catch (error: any) {

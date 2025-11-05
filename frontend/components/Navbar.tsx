@@ -10,15 +10,29 @@ export default function Navbar() {
   const [auth, setAuth] = useState<{ username: string | null }>({ username: null });
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
+  // 인증 상태 업데이트 함수
+  const updateAuth = () => {
     const authData = getAuth();
     setAuth({ username: authData.username });
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    updateAuth();
+
+    // 로그인 이벤트 리스너 추가
+    window.addEventListener('auth-changed', updateAuth);
+    
+    return () => {
+      window.removeEventListener('auth-changed', updateAuth);
+    };
   }, []);
 
   const handleLogout = () => {
     clearAuth();
     setAuth({ username: null });
+    // 로그아웃 이벤트 발생
+    window.dispatchEvent(new Event('auth-changed'));
     router.push('/');
     router.refresh();
   };
