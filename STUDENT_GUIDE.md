@@ -629,29 +629,98 @@ kubectl logs deployment/frontend -n board
 
 ---
 
-### Step 5: 애플리케이션 접속
+### Step 5: Service를 NodePort로 변경하여 외부 접속하기
 
-#### 애플리케이션 접속
+기본적으로 배포된 Service는 `ClusterIP` 타입이라 클러스터 내부에서만 접속 가능합니다.
+외부에서 접속하려면 `NodePort`로 변경해야 합니다.
 
-**방법 1: 포트 포워딩 (VM 내부에서 테스트)**
+#### 5-1. 현재 Service 타입 확인
 
 ```bash
-# Frontend 서비스로 포트 포워딩
-kubectl port-forward -n board service/frontend-service 3000:3000
+# Service 목록 확인
+kubectl get svc -n board
+
+# 출력 예시:
+# NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+# frontend-service   ClusterIP   10.43.xxx.xxx   <none>        3000/TCP   5m
+# backend-service    ClusterIP   10.43.xxx.xxx   <none>        8080/TCP   5m
 ```
 
-그리고 다른 터미널에서 `curl http://localhost:3000` 테스트
+**확인**: `TYPE`이 `ClusterIP`로 표시됩니다 → 외부 접속 불가능
 
-**방법 2: 본인 PC 브라우저에서 직접 접속 (권장)**
+#### 5-2. Frontend Service를 NodePort로 변경
 
-`http://YOUR_VM_IP:3000` 접속
+```bash
+# kubectl patch를 사용한 실시간 변경
+kubectl patch svc frontend-service -n board -p '{"spec":{"type":"NodePort"}}'
+
+# Service 확인
+kubectl get svc frontend-service -n board
+
+# 출력 예시:
+# NAME               TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+# frontend-service   NodePort   10.43.xxx.xxx   <none>        3000:31234/TCP   5m
+#                                                              ^^^^^^^^^^^^
+#                                                              3000:NodePort
+```
+
+**설명**:
+- `3000:31234` → 내부 포트 3000, 외부 NodePort 31234 (자동 할당)
+- NodePort는 30000-32767 범위에서 자동으로 할당됩니다
+
+#### 5-3. Backend Service도 NodePort로 변경 (선택사항)
+
+```bash
+# Backend API 테스트를 위해 변경
+kubectl patch svc backend-service -n board -p '{"spec":{"type":"NodePort"}}'
+
+# Service 확인
+kubectl get svc backend-service -n board
+```
+
+#### 5-4. 할당된 NodePort 확인
+
+```bash
+# 모든 Service 확인
+kubectl get svc -n board
+
+# 출력 예시:
+# NAME               TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+# frontend-service   NodePort   10.43.xxx.xxx   <none>        3000:31234/TCP   5m
+# backend-service    NodePort   10.43.xxx.xxx   <none>        8080:32567/TCP   5m
+```
+
+**중요**: `PORT(S)` 컬럼에서 뒤쪽 번호가 실제 접속 포트입니다!
+
+#### 5-5. 본인 PC 브라우저에서 접속
+
+```
+http://YOUR_VM_IP:31234
+```
+
+**예시**: 
+- Frontend NodePort가 `31234`라면 → `http://35.190.237.182:31234`
+- Backend NodePort가 `32567`이라면 → `http://35.190.237.182:32567/actuator/health`
 
 **테스트**:
-1. 로그인: `admin` / `admin123`
-2. 게시글 작성
-3. 댓글 작성
+1. 브라우저에서 `http://YOUR_VM_IP:NodePort` 접속
+2. 로그인: `admin` / `admin123`
+3. 게시글 작성
+4. 댓글 작성
 
-**참고**: Kubernetes의 Service가 NodePort로 설정되어 있어 VM의 외부 IP로 직접 접속 가능합니다.
+#### 5-6. Service 타입 원래대로 되돌리기 (실습 종료 후)
+
+```bash
+# ClusterIP로 다시 변경
+kubectl patch svc frontend-service -n board -p '{"spec":{"type":"ClusterIP"}}'
+kubectl patch svc backend-service -n board -p '{"spec":{"type":"ClusterIP"}}'
+```
+
+**💡 학습 포인트**:
+- **ClusterIP**: 클러스터 내부에서만 접속 가능 (기본값)
+- **NodePort**: 모든 노드의 특정 포트로 외부 접속 가능
+- **LoadBalancer**: 클라우드 로드밸런서 사용 (GCP, AWS, Azure)
+- **kubectl patch**: Service를 재생성하지 않고 실시간 수정 가능
 
 ---
 
