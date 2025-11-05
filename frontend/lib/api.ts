@@ -1,22 +1,51 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+// 런타임 API URL 저장
+let cachedApiUrl: string | null = null;
 
+// 런타임에 설정을 가져오는 함수
+async function getConfig(): Promise<string> {
+  // 이미 캐시된 값이 있으면 재사용
+  if (cachedApiUrl) {
+    return cachedApiUrl;
+  }
+
+  try {
+    const response = await fetch('/api/config', {
+      cache: 'no-store', // 항상 최신 설정 가져오기
+    });
+    const config = await response.json();
+    cachedApiUrl = config.apiUrl;
+    return cachedApiUrl;
+  } catch (error) {
+    console.error('Failed to load config, using fallback:', error);
+    cachedApiUrl = 'http://localhost:8080';
+    return cachedApiUrl;
+  }
+}
+
+// Axios 인스턴스 생성 (초기 baseURL은 fallback)
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add token to requests if available
-api.interceptors.request.use((config) => {
+// Request Interceptor: 모든 요청 전에 최신 API URL 설정
+api.interceptors.request.use(async (config) => {
+  // 런타임 API URL 가져오기
+  const apiUrl = await getConfig();
+  config.baseURL = apiUrl;
+
+  // JWT 토큰 추가
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
+  
   return config;
 });
 
