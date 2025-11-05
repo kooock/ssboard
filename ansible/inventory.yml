@@ -176,5 +176,5 @@ all:
   children:
     k3s_cluster:
       hosts:
-        vm-[01:20]
+        vm-[21:61]
 
