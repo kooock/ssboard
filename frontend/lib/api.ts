@@ -1,45 +1,15 @@
 import axios from 'axios';
 
-// 런타임 API URL 저장
-let cachedApiUrl: string | null = null;
-
-// 런타임에 설정을 가져오는 함수
-async function getConfig(): Promise<string> {
-  // 이미 캐시된 값이 있으면 재사용
-  if (cachedApiUrl) {
-    return cachedApiUrl;
-  }
-
-  try {
-    const response = await fetch('/api/config', {
-      cache: 'no-store', // 항상 최신 설정 가져오기
-    });
-    const config = await response.json();
-    cachedApiUrl = config.apiUrl;
-    return config.apiUrl;
-  } catch (error) {
-    console.error('Failed to load config, using fallback:', error);
-    const fallbackUrl = 'http://localhost:8080';
-    cachedApiUrl = fallbackUrl;
-    return fallbackUrl;
-  }
-}
-
-// Axios 인스턴스 생성 (초기 baseURL은 fallback)
+// Axios 인스턴스 생성
+// baseURL을 설정하지 않으면 상대 경로 사용 (Next.js rewrites가 프록시)
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request Interceptor: 모든 요청 전에 최신 API URL 설정
-api.interceptors.request.use(async (config) => {
-  // 런타임 API URL 가져오기
-  const apiUrl = await getConfig();
-  config.baseURL = apiUrl;
-
-  // JWT 토큰 추가
+// Request Interceptor: JWT 토큰 추가
+api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
     if (token) {

@@ -10,9 +10,8 @@ data:
   DB_NAME: "boarddb"
   DB_USER: "admin"
   
-  # API URL for frontend
-  # IMPORTANT: Update this with your actual VM IP or domain
-  # Example: "http://35.190.237.182:8080" or "http://your-domain.com:8080"
-  # For k8s internal communication: "http://backend-service:8080"
-  API_URL: "http://YOUR_VM_IP:8080"
+  # Backend URL for frontend Next.js server (internal proxy)
+  # Frontend uses Next.js rewrites to proxy API requests
+  # K8s service name works because Next.js server proxies the requests
+  BACKEND_URL: "http://backend-service:8080"
 

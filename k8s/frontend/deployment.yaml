@@ -28,11 +28,11 @@ spec:
         - containerPort: 3000
           name: http
         env:
-        - name: API_URL
+        - name: BACKEND_URL
           valueFrom:
             configMapKeyRef:
               name: board-config
-              key: API_URL
+              key: BACKEND_URL
         resources:
           requests:
             memory: "256Mi"

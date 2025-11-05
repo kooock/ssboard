@@ -58,10 +58,9 @@ services:
       backend:
         condition: service_healthy
     environment:
-      # IMPORTANT: API_URL must be set to your VM's IP or domain
-      # Example: API_URL=http://YOUR_VM_IP:8080 docker-compose up -d
-      # Will fail if API_URL is not set
-      API_URL: "${API_URL:?ERROR - API_URL environment variable is required. Set it with export API_URL=http://YOUR_VM_IP:8080}"
+      # Frontend uses Next.js rewrites to proxy API requests to backend
+      # Internal service name works because Next.js server proxies the requests
+      BACKEND_URL: http://backend:8080
     ports:
       - "3000:3000"
     networks:

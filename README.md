@@ -139,13 +139,6 @@ docker network rm board-network
 ### 2.1 Docker Compose 실행
 
 ```bash
-# IMPORTANT: Set API_URL environment variable
-# Replace YOUR_VM_IP with your actual VM IP
-export API_URL=http://YOUR_VM_IP:8080
-
-# Example:
-# export API_URL=http://35.190.237.182:8080
-
 # 백그라운드 실행
 docker-compose up -d
 
@@ -154,10 +147,13 @@ docker-compose logs -f
 
 # 특정 서비스 로그만 확인
 docker-compose logs -f backend
-
-# Or set API_URL inline:
-# API_URL=http://YOUR_VM_IP:8080 docker-compose up -d
 ```
+
+**✨ API 프록시 방식**
+- Frontend Next.js 서버가 Backend API를 프록시합니다
+- 브라우저는 `/api/*` 요청을 Frontend 서버로 보냄
+- Frontend 서버가 내부 서비스 이름(`backend:8080`)으로 프록시
+- 환경변수 설정 불필요, CORS 문제 없음
 
 ### 2.2 확인
 
@@ -172,11 +168,35 @@ docker-compose ps
 ### 2.3 정리
 
 ```bash
-# 서비스 중지 및 삭제
+# 서비스 중지 및 삭제 (볼륨은 유지)
 docker-compose down
 
-# 볼륨까지 삭제
+# 볼륨까지 삭제 (데이터베이스 초기화)
 docker-compose down -v
+```
+
+### 2.4 초기 데이터 재생성
+
+초기 데이터(admin, user1, user2)는 **데이터베이스가 비어있을 때만** 자동 생성됩니다.
+
+**이미 데이터가 있는 경우 초기화하려면:**
+```bash
+# 볼륨을 포함하여 완전히 삭제
+docker-compose down -v
+
+# 다시 시작
+docker-compose up -d
+
+# 초기 데이터 로드 확인
+docker-compose logs backend | grep "Demo data loaded"
+
+# 예상 출력:
+# ===================================
+# Demo data loaded successfully!
+# Admin: admin / admin123
+# User1: user1 / user123
+# User2: user2 / user123
+# ===================================
 ```
 
 ---
@@ -199,19 +219,10 @@ docker login
 
 #### Kubernetes 매니페스트 수정
 
-1. **IMPORTANT**: `k8s/configmap.yaml` - API URL 설정
-
-   ```yaml
-   data:
-     # Replace YOUR_VM_IP with your actual VM IP
-     API_URL: "http://35.190.237.182:8080"
-   ```
-   
-2. `k8s/backend/deployment.yaml`: Docker Hub username 업데이트
-3. `k8s/frontend/deployment.yaml`: Docker Hub username 업데이트
-
-   - 환경변수는 ConfigMap에서 자동으로 가져옴
-4. `k8s/frontend/ingress.yaml`: 도메인 또는 IP 설정
+1. `k8s/backend/deployment.yaml`: Docker Hub username 업데이트
+2. `k8s/frontend/deployment.yaml`: Docker Hub username 업데이트
+   - `BACKEND_URL`은 ConfigMap에서 자동으로 가져옴 (`backend-service:8080`)
+3. `k8s/frontend/ingress.yaml`: 도메인 또는 IP 설정
 
 ### 3.2 배포
 
@@ -400,79 +411,75 @@ ansible-playbook -i inventory.yml playbook.yml --limit vm-01,vm-02,vm-03
 
 ## 🧪 테스트 계정
 
-초기 데이터로 다음 계정들이 생성됩니다:
+초기 데이터로 다음 계정들이 **데이터베이스가 비어있을 때** 자동 생성됩니다:
 
 - **Admin**: `admin` / `admin123`
 - **User1**: `user1` / `user123`
 - **User2**: `user2` / `user123`
 
+**주의**: 초기 데이터는 `userRepository.count() == 0`일 때만 생성됩니다. 
+데이터를 초기화하려면 `docker-compose down -v`로 볼륨을 삭제하세요.
+
 ---
 
-## ⚙️ Runtime Config API
+## ⚙️ API 프록시 아키텍처
 
-Frontend는 **런타임에 동적으로 Backend API URL을 가져옵니다**. 이를 통해 빌드 한 번으로 모든 환경에서 사용할 수 있습니다.
+Frontend는 **Next.js rewrites를 사용하여 Backend API를 프록시**합니다. 이를 통해 CORS 문제 없이 깔끔한 아키텍처를 구현합니다.
 
 ### 작동 방식
 
-1. **Config API 엔드포인트**: `/api/config`
+```
+브라우저 → Frontend (/api/posts)
+         ↓ (Next.js rewrites)
+         → Backend (http://backend:8080/api/posts)
+```
 
-   - 서버 측 환경변수 `API_URL`을 클라이언트에 노출
-   - Next.js API Routes 사용
-2. **동적 URL 로드**:
-
-   - 모든 Backend API 호출 전에 `/api/config`에서 URL 가져오기
-   - 첫 요청 후 캐싱하여 성능 최적화
-3. **환경변수 전달**:
-
-   ```bash
-   # Docker run (Replace YOUR_VM_IP with actual IP)
-   docker run -d -e API_URL=http://YOUR_VM_IP:8080 -p 3000:3000 board-frontend:v1
-
-   # Docker Compose (REQUIRED - no default value)
-   export API_URL=http://YOUR_VM_IP:8080
-   docker-compose up -d
-   # Or inline:
-   API_URL=http://YOUR_VM_IP:8080 docker-compose up -d
-
-   # Kubernetes
-   # Edit k8s/configmap.yaml and set API_URL to your VM IP
-   ```
+1. **브라우저 요청**: 상대 경로 `/api/posts`로 요청
+2. **Next.js 서버**: `next.config.js`의 rewrites 규칙에 따라 프록시
+3. **Backend 호출**: 내부 서비스 이름(`backend:8080`)으로 요청
 
 ### 장점
 
-- ✅ **환경 독립성**: 빌드 한 번으로 개발/스테이징/프로덕션 모두 사용
-- ✅ **간편한 배포**: 런타임에 환경변수만 변경하면 즉시 적용
-- ✅ **이미지 재사용**: 재빌드 없이 다른 환경에서 동일 이미지 사용
-- ✅ **자동 적용**: 모든 API 호출이 자동으로 올바른 URL 사용
+- ✅ **CORS 문제 없음**: 같은 origin (same-origin)
+- ✅ **내부 DNS 사용**: VM IP 설정 불필요
+- ✅ **보안 강화**: Backend를 외부에 직접 노출하지 않음
+- ✅ **간편한 설정**: 환경변수 최소화
+
+### 설정 파일
+
+**next.config.js**:
+```javascript
+async rewrites() {
+  const backendUrl = process.env.BACKEND_URL || 'http://backend:8080';
+  return [
+    {
+      source: '/api/:path*',
+      destination: `${backendUrl}/api/:path*`,
+    },
+  ];
+}
+```
+
+**docker-compose.yml**:
+```yaml
+environment:
+  BACKEND_URL: http://backend:8080  # 내부 서비스 이름
+```
+
+**k8s/configmap.yaml**:
+```yaml
+BACKEND_URL: "http://backend-service:8080"  # k8s 서비스 이름
+```
 
 ### 테스트
 
 ```bash
-# Config API 응답 확인
-curl http://YOUR_VM_IP:3000/api/config
-
-# 예상 응답:
-# {"apiUrl":"http://YOUR_VM_IP:8080"}
-
-# 브라우저 Console에서 확인
+# 브라우저에서 프록시 테스트
 # F12 → Console 탭
-fetch('/api/config').then(r => r.json()).then(console.log)
-```
+fetch('/api/posts').then(r => r.json()).then(console.log)
 
-### 다양한 환경 예시
-
-```bash
-# Local VM 환경 (권장)
-docker run -d -e API_URL=http://192.168.1.100:8080 -p 3000:3000 board-frontend:v1
-
-# Cloud VM 환경
-docker run -d -e API_URL=http://35.190.237.182:8080 -p 3000:3000 board-frontend:v1
-
-# 프로덕션 환경
-docker run -d -e API_URL=https://api.production.com -p 3000:3000 board-frontend:v1
-
-# Docker Desktop (Mac/Windows) - use host.docker.internal
-docker run -d -e API_URL=http://host.docker.internal:8080 -p 3000:3000 board-frontend:v1
+# 또는 curl로 Frontend를 통한 API 호출
+curl http://localhost:3000/api/posts
 ```
 
 ---

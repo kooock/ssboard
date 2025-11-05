@@ -25,26 +25,22 @@ Docker/Kubernetes 강의를 빠르게 시작하기 위한 가이드입니다.
 git clone <repository-url>
 cd ssboard
 
-# 2. IMPORTANT: Set API_URL environment variable
-# Replace YOUR_VM_IP with your actual VM IP
-export API_URL=http://YOUR_VM_IP:8080
-
-# Example:
-# export API_URL=http://35.190.237.182:8080
-
-# 3. 실행
+# 2. 실행
 docker-compose up -d
 
-# 4. 로그 확인
+# 3. 로그 확인
 docker-compose logs -f
 
-# 5. 브라우저에서 확인
-# http://YOUR_VM_IP:3000
+# 4. 브라우저에서 확인
+# http://localhost:3000
 ```
 
-**테스트 계정**: `admin` / `admin123`
+**테스트 계정**: `admin` / `admin123`, `user1` / `user123`, `user2` / `user123`
 
-**⚠️ 주의**: `API_URL` 환경변수는 필수입니다. localhost 사용 시 문제가 발생할 수 있습니다.
+**✨ API 프록시 방식**:
+- Frontend Next.js 서버가 Backend API를 프록시합니다
+- 환경변수 설정 불필요, CORS 문제 없음
+- 초기 데이터는 데이터베이스가 비어있을 때만 생성됩니다
 
 ---
 
@@ -123,9 +119,6 @@ docker run -d --name frontend --network board-network \
 
 ### 2단계: Docker Compose (20분)
 ```bash
-# IMPORTANT: Set API_URL first
-export API_URL=http://YOUR_VM_IP:8080
-
 docker-compose up -d
 docker-compose ps
 docker-compose logs -f
@@ -142,6 +135,19 @@ kubectl scale deployment backend --replicas=3 -n board
 ---
 
 ## 🔧 자주 발생하는 문제
+
+### 초기 데이터가 로드되지 않음
+
+```bash
+# 볼륨을 포함하여 완전히 삭제
+docker-compose down -v
+
+# 다시 시작 (환경변수 설정 불필요)
+docker-compose up -d
+
+# 초기 데이터 로드 확인
+docker-compose logs backend | grep "Demo data loaded"
+```
 
 ### 포트 충돌
 ```bash
