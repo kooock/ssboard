@@ -144,7 +144,7 @@ docker run -d \
 > 브라우저는 /api/posts로 요청하고, Next.js 서버가 backend:8080으로 프록시합니다.
 > 이렇게 하면 CORS 문제가 없고, 내부 서비스 이름을 사용할 수 있습니다."
 
-**브라우저 열기**: `http://localhost:3000`
+**브라우저 열기**: `http://{{본인VM의IP}}:3000`
 
 **시연**:
 1. 로그인 (admin / admin123)
@@ -305,20 +305,89 @@ k8s/
 
 ---
 
-### 0:50-0:52 배포 (2분)
+### 0:48-0:50 Docker Hub에 이미지 푸시 (2분)
 
-**배포 전 확인사항**:
+**교육 포인트**:
+> "Kubernetes는 컨테이너 이미지를 레지스트리에서 가져옵니다.
+> 로컬 이미지는 사용할 수 없으므로 Docker Hub에 푸시해야 합니다."
 
-1. Docker Hub username 업데이트
-   - `k8s/backend/deployment.yaml`
-   - `k8s/frontend/deployment.yaml`
+```bash
+# 1. Docker Hub 로그인
+docker login
+# Username과 Password 입력
 
-2. **참고**: `k8s/configmap.yaml`의 `BACKEND_URL`
-   ```yaml
-   data:
-     BACKEND_URL: "http://backend-service:8080"
-   ```
-   **강조**: "Frontend가 API를 프록시하므로 k8s 내부 서비스 이름을 사용합니다!"
+# 2. 이미지 태그 지정
+# ⚠️ YOUR_DOCKERHUB_USERNAME을 본인의 Docker Hub 계정으로 변경!
+docker tag board-backend:v1 YOUR_DOCKERHUB_USERNAME/board-backend:latest
+docker tag board-frontend:v1 YOUR_DOCKERHUB_USERNAME/board-frontend:latest
+
+# 예시:
+# docker tag board-backend:v1 johndoe/board-backend:latest
+
+# 3. 이미지 푸시 (업로드)
+docker push YOUR_DOCKERHUB_USERNAME/board-backend:latest
+docker push YOUR_DOCKERHUB_USERNAME/board-frontend:latest
+
+# 또는 스크립트 사용 (더 빠름)
+cd ~/ssboard
+./build-and-push.sh YOUR_DOCKERHUB_USERNAME
+```
+
+**강조**:
+- ⚠️ **IMPORTANT**: `YOUR_DOCKERHUB_USERNAME`을 **반드시** 본인의 Docker Hub 계정으로 변경하세요!
+- Docker Hub는 공개 이미지 레지스트리 (GitHub과 유사)
+- 무료 계정은 public repository 무제한 사용 가능
+- 실제 프로덕션에서는 private registry 사용 (Harbor, ECR, GCR 등)
+
+**시연 중 설명**:
+- "이미지가 업로드되는 동안 잠깐 기다립니다."
+- "Docker Hub에서 본인의 repository를 확인할 수 있습니다."
+
+**배포 전 확인**:
+```bash
+# 푸시된 이미지 확인
+docker images | grep board
+
+# Docker Hub에서 pull 테스트
+docker pull YOUR_DOCKERHUB_USERNAME/board-backend:latest
+```
+
+---
+
+### 0:50-0:54 Kubernetes 매니페스트 수정 및 배포 (4분)
+
+**⚠️ IMPORTANT: Kubernetes 매니페스트 수정 필수!**
+
+**1단계: Docker Hub username 업데이트**
+
+`k8s/backend/deployment.yaml`:
+```yaml
+spec:
+  containers:
+  - name: backend
+    image: YOUR_DOCKERHUB_USERNAME/board-backend:latest  # ← 변경!
+```
+
+`k8s/frontend/deployment.yaml`:
+```yaml
+spec:
+  containers:
+  - name: frontend
+    image: YOUR_DOCKERHUB_USERNAME/board-frontend:latest  # ← 변경!
+```
+
+**강조**: 
+> "YOUR_DOCKERHUB_USERNAME을 본인의 계정으로 변경하지 않으면
+> 이미지를 찾을 수 없어서 Pod가 시작되지 않습니다!"
+
+**2단계: ConfigMap 확인**
+
+`k8s/configmap.yaml`의 `BACKEND_URL`:
+```yaml
+data:
+  BACKEND_URL: "http://backend-service:8080"
+```
+**설명**: "Frontend가 API를 프록시하므로 k8s 내부 서비스 이름을 사용합니다!"
 
 **배포 실행**:
 
@@ -380,7 +449,7 @@ kubectl get pods -n board -w
 kubectl port-forward -n board service/frontend-service 3000:3000
 ```
 
-**브라우저**: `http://localhost:3000`
+**브라우저**: `http://{{본인VM의IP}}:3000`
 
 **설명**:
 - 실제 환경에서는 Ingress를 통해 도메인으로 접속
@@ -441,8 +510,8 @@ kubectl get nodes
 - 폰트 크기 크게
 
 4. **브라우저 탭 준비**:
-- localhost:3000
-- localhost:8080/actuator/health
+- {{본인VM의IP}}:3000
+- {{본인VM의IP}}:8080/actuator/health
 
 ---
 
@@ -508,11 +577,11 @@ docker inspect frontend | grep BACKEND_URL
 kubectl describe pod <frontend-pod> -n board | grep BACKEND_URL
 
 # Frontend를 통한 API 프록시 테스트
-curl http://localhost:3000/api/posts
+curl http://{{본인VM의IP}}:3000/api/posts
 # Frontend가 backend:8080으로 프록시
 
 # Backend 직접 접근 테스트
-curl http://localhost:8080/actuator/health
+curl http://{{본인VM의IP}}:8080/actuator/health
 kubectl port-forward -n board service/backend-service 8080:8080
 ```
 

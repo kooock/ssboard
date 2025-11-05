@@ -46,25 +46,43 @@ docker-compose logs -f
 
 ### Option 2: Kubernetes (k3s)
 
+**⚠️ IMPORTANT**: `YOUR_DOCKERHUB_USERNAME`을 **본인의 Docker Hub 계정**으로 변경하세요!
+
 ```bash
-# 1. 이미지 빌드 및 푸시
+# 1. Docker Hub 로그인
 docker login
+
+# 2. 이미지 태그 및 푸시
+# 방법 A: 수동으로 태그 및 푸시
+docker tag board-backend:v1 YOUR_DOCKERHUB_USERNAME/board-backend:latest
+docker tag board-frontend:v1 YOUR_DOCKERHUB_USERNAME/board-frontend:latest
+docker push YOUR_DOCKERHUB_USERNAME/board-backend:latest
+docker push YOUR_DOCKERHUB_USERNAME/board-frontend:latest
+
+# 방법 B: 스크립트 사용 (권장)
 ./build-and-push.sh YOUR_DOCKERHUB_USERNAME
 
-# 2. Kubernetes 매니페스트 수정
-# k8s/backend/deployment.yaml: YOUR_DOCKERHUB_USERNAME 변경
-# k8s/frontend/deployment.yaml: YOUR_DOCKERHUB_USERNAME 변경
+# 3. Kubernetes 매니페스트 수정 (필수!)
+# k8s/backend/deployment.yaml 파일 열기
+#   → image: YOUR_DOCKERHUB_USERNAME/board-backend:latest
+# k8s/frontend/deployment.yaml 파일 열기
+#   → image: YOUR_DOCKERHUB_USERNAME/board-frontend:latest
 
-# 3. 배포
+# 4. 배포
 cd k8s
 ./deploy-all.sh
 
-# 4. 포트 포워딩
+# 5. 상태 확인
+kubectl get all -n board
+
+# 6. 포트 포워딩
 kubectl port-forward -n board service/frontend-service 3000:3000
 
-# 5. 브라우저에서 확인
+# 7. 브라우저에서 확인
 # http://localhost:3000
 ```
+
+**참고**: Docker Hub username을 변경하지 않으면 이미지를 찾을 수 없어 Pod가 시작되지 않습니다.
 
 ---
 

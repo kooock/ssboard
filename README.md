@@ -118,7 +118,7 @@ docker logs backend
 docker logs frontend
 
 # 웹 브라우저에서 접속
-# http://localhost:3000
+# http://{{본인VM의IP}}:3000
 ```
 
 ### 1.6 정리
@@ -158,7 +158,7 @@ docker-compose logs -f backend
 docker-compose ps
 
 # 웹 브라우저에서 접속
-# http://localhost:3000
+# http://{{본인VM의IP}}:3000
 ```
 
 ### 2.3 정리
@@ -203,22 +203,43 @@ docker-compose logs backend | grep "Demo data loaded"
 
 #### 이미지 빌드 및 푸시
 
+**⚠️ IMPORTANT**: `YOUR_DOCKERHUB_USERNAME`을 **본인의 Docker Hub 계정**으로 변경하세요!
+
 ```bash
 # Docker Hub에 로그인
 docker login
 
-# 이미지 빌드 및 푸시
+# 방법 A: 스크립트 사용 (권장)
 ./build-and-push.sh YOUR_DOCKERHUB_USERNAME
 
-# 예: ./build-and-push.sh johndoe
+# 예시:
+# ./build-and-push.sh johndoe
+
+# 방법 B: 수동으로 태그 및 푸시
+docker tag board-backend:v1 YOUR_DOCKERHUB_USERNAME/board-backend:latest
+docker tag board-frontend:v1 YOUR_DOCKERHUB_USERNAME/board-frontend:latest
+docker push YOUR_DOCKERHUB_USERNAME/board-backend:latest
+docker push YOUR_DOCKERHUB_USERNAME/board-frontend:latest
 ```
 
 #### Kubernetes 매니페스트 수정
 
-1. `k8s/backend/deployment.yaml`: Docker Hub username 업데이트
-2. `k8s/frontend/deployment.yaml`: Docker Hub username 업데이트
-   - `BACKEND_URL`은 ConfigMap에서 자동으로 가져옴 (`backend-service:8080`)
-3. `k8s/frontend/ingress.yaml`: 도메인 또는 IP 설정
+**⚠️ 필수 작업**: 다음 파일에서 `YOUR_DOCKERHUB_USERNAME`을 본인의 Docker Hub 계정으로 변경하세요!
+
+1. `k8s/backend/deployment.yaml`: 
+   ```yaml
+   image: YOUR_DOCKERHUB_USERNAME/board-backend:latest  # ← 변경!
+   ```
+
+2. `k8s/frontend/deployment.yaml`: 
+   ```yaml
+   image: YOUR_DOCKERHUB_USERNAME/board-frontend:latest  # ← 변경!
+   ```
+   - `BACKEND_URL`은 ConfigMap에서 자동으로 가져옴 (`http://backend-service:8080`)
+
+3. `k8s/frontend/ingress.yaml`: 도메인 또는 IP 설정 (선택사항)
+
+**참고**: Docker Hub username을 변경하지 않으면 이미지를 찾을 수 없어 Pod가 `ImagePullBackOff` 상태가 됩니다.
 
 ### 3.2 배포
 
@@ -475,7 +496,7 @@ BACKEND_URL: "http://backend-service:8080"  # k8s 서비스 이름
 fetch('/api/posts').then(r => r.json()).then(console.log)
 
 # 또는 curl로 Frontend를 통한 API 호출
-curl http://localhost:3000/api/posts
+curl http://{{본인VM의IP}}:3000/api/posts
 ```
 
 ---
@@ -500,7 +521,7 @@ kubectl exec -it deployment/postgres -n board -- psql -U admin -d boarddb
 
 ```bash
 # Backend가 실행 중인지 확인
-curl http://localhost:8080/actuator/health
+curl http://{{본인VM의IP}}:8080/actuator/health
 
 # 네트워크 확인 (Docker Compose)
 docker-compose exec frontend ping backend
@@ -509,7 +530,7 @@ docker-compose exec frontend ping backend
 docker inspect frontend | grep API_URL
 
 # Runtime Config API 확인
-curl http://localhost:3000/api/config
+curl http://{{본인VM의IP}}:3000/api/config
 ```
 
 ### Kubernetes Pod가 시작되지 않는 경우
