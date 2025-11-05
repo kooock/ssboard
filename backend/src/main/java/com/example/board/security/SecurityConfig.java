@@ -14,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -37,9 +38,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/actuator/**").permitAll()
-                .requestMatchers("/api/posts/**").permitAll()  // GET posts allowed for all
-                .requestMatchers("/api/comments/**").permitAll()  // GET comments allowed for all
+                // OPTIONS 요청 허용 (CORS preflight)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // 인증 API
+                .requestMatchers("/api/auth/**").permitAll()
+                // 게시글 조회는 누구나 가능
+                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+                // Actuator
+                .requestMatchers("/actuator/**").permitAll()
+                // 나머지는 인증 필요
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
@@ -54,11 +62,29 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        
+        // 모든 Origin 허용
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
+        // 모든 HTTP 메서드 허용
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
+        
+        // 모든 헤더 허용
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        
+        // 응답 헤더 노출
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type",
+            "X-Total-Count"
+        ));
+        
+        // Credentials 허용
         configuration.setAllowCredentials(true);
+        
+        // Preflight 캐시 시간
         configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
