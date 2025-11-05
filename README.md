@@ -3,6 +3,13 @@
 Spring Boot + Next.js + PostgreSQL을 사용한 간단한 게시판 애플리케이션입니다.
 Docker와 Kubernetes(k3s) 학습을 위해 제작되었습니다.
 
+## 📚 문서 가이드
+
+- **[STUDENT_GUIDE.md](STUDENT_GUIDE.md)** - 학생용 단계별 실습 가이드 (⭐ 시작하기)
+- **[TEACHING_GUIDE.md](TEACHING_GUIDE.md)** - 강사용 강의 진행 가이드
+- **[QUICKSTART.md](QUICKSTART.md)** - 빠른 시작 가이드
+- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - 프로젝트 전체 요약
+
 ## 📋 프로젝트 구조
 
 ```
