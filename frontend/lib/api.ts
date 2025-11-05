@@ -16,11 +16,12 @@ async function getConfig(): Promise<string> {
     });
     const config = await response.json();
     cachedApiUrl = config.apiUrl;
-    return cachedApiUrl;
+    return config.apiUrl;
   } catch (error) {
     console.error('Failed to load config, using fallback:', error);
-    cachedApiUrl = 'http://localhost:8080';
-    return cachedApiUrl;
+    const fallbackUrl = 'http://localhost:8080';
+    cachedApiUrl = fallbackUrl;
+    return fallbackUrl;
   }
 }
 
