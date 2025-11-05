@@ -4,87 +4,171 @@
 
 all:
   hosts:
-    vm-01:
-      ansible_host: 192.168.1.101
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-02:
-      ansible_host: 192.168.1.102
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-03:
-      ansible_host: 192.168.1.103
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-04:
-      ansible_host: 192.168.1.104
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-05:
-      ansible_host: 192.168.1.105
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-06:
-      ansible_host: 192.168.1.106
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-07:
-      ansible_host: 192.168.1.107
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-08:
-      ansible_host: 192.168.1.108
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-09:
-      ansible_host: 192.168.1.109
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-10:
-      ansible_host: 192.168.1.110
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-11:
-      ansible_host: 192.168.1.111
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-12:
-      ansible_host: 192.168.1.112
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-13:
-      ansible_host: 192.168.1.113
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-14:
-      ansible_host: 192.168.1.114
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-15:
-      ansible_host: 192.168.1.115
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-16:
-      ansible_host: 192.168.1.116
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-17:
-      ansible_host: 192.168.1.117
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-18:
-      ansible_host: 192.168.1.118
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-19:
-      ansible_host: 192.168.1.119
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    vm-20:
-      ansible_host: 192.168.1.120
-      ansible_user: ubuntu
-      ansible_ssh_private_key_file: ~/.ssh/id_rsa
-    
+    vm-21:
+      ansible_host: 10.146.0.9
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-22:
+      ansible_host: 10.174.0.9
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-23:
+      ansible_host: 10.178.0.8
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-24:
+      ansible_host: 10.178.0.9
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-25:
+      ansible_host: 10.140.0.2
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-26:
+      ansible_host: 10.140.0.3
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-27:
+      ansible_host: 10.140.0.4
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-28:
+      ansible_host: 10.140.0.5
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-29:
+      ansible_host: 10.140.0.6
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-30:
+      ansible_host: 10.140.0.7
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-31:
+      ansible_host: 10.140.0.8
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-32:
+      ansible_host: 10.140.0.9
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-33:
+      ansible_host: 10.170.0.2
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-34:
+      ansible_host: 10.170.0.3
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-35:
+      ansible_host: 10.170.0.4
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-36:
+      ansible_host: 10.170.0.5
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-37:
+      ansible_host: 10.170.0.6
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-38:
+      ansible_host: 10.170.0.7
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-39:
+      ansible_host: 10.170.0.8
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-40:
+      ansible_host: 10.170.0.9
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-41:
+      ansible_host: 10.148.0.2
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-42:
+      ansible_host: 10.148.0.3
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-43:
+      ansible_host: 10.148.0.4
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-44:
+      ansible_host: 10.148.0.5
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-45:
+      ansible_host: 10.148.0.6
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-46:
+      ansible_host: 10.148.0.7
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-47:
+      ansible_host: 10.148.0.8
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-48:
+      ansible_host: 10.148.0.9
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-49:
+      ansible_host: 10.184.0.2
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-50:
+      ansible_host: 10.184.0.3
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-51:
+      ansible_host: 10.184.0.4
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-52:
+      ansible_host: 10.184.0.5
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-53:
+      ansible_host: 10.184.0.6
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-54:
+      ansible_host: 10.184.0.7
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-55:
+      ansible_host: 10.184.0.8
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-56:
+      ansible_host: 10.184.0.9
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-57:
+      ansible_host: 10.152.0.2
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-58:
+      ansible_host: 10.152.0.3
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-59:
+      ansible_host: 10.152.0.4
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-60:
+      ansible_host: 10.152.0.5
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+    vm-61:
+      ansible_host: 10.152.0.6
+      ansible_user: koock1994
+      ansible_ssh_private_key_file: ~/.ssh/ssboard
+
   vars:
     ansible_python_interpreter: /usr/bin/python3
     ansible_ssh_common_args: '-o StrictHostKeyChecking=no'

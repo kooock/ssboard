@@ -184,16 +184,15 @@ docker login
 #### Kubernetes 매니페스트 수정
 
 1. `k8s/configmap.yaml`: API URL 설정 (Runtime Config API 사용)
+
    ```yaml
    data:
      API_URL: "http://YOUR_DOMAIN_OR_IP:8080"
    ```
-
 2. `k8s/backend/deployment.yaml`: Docker Hub username 업데이트
-
 3. `k8s/frontend/deployment.yaml`: Docker Hub username 업데이트
-   - 환경변수는 ConfigMap에서 자동으로 가져옴
 
+   - 환경변수는 ConfigMap에서 자동으로 가져옴
 4. `k8s/frontend/ingress.yaml`: 도메인 또는 IP 설정
 
 ### 3.2 배포
@@ -288,9 +287,11 @@ kubectl logs -f deployment/postgres -n board
 
 ---
 
-## 🤖 Phase 4: VM 자동 설정 (Ansible)
+## 🤖 사전준비: VM 자동 설정 (Ansible)
 
 20개의 VM에 Docker와 k3s를 자동으로 설치합니다.
+
+혼자 실습할 경우는 ansible을 사용하지 않아도 됩니다.
 
 ### 4.1 사전 준비
 
@@ -308,6 +309,7 @@ ssh-keygen -t rsa -b 4096
 1. **Inventory 수정**: `ansible/inventory.yml`에 실제 VM IP 주소 입력
 2. **변수 설정**: `ansible/group_vars/all.yml`에서 Docker Hub username 등 수정
 3. **SSH 키 배포**:
+
 ```bash
 cd ansible
 chmod +x setup-ssh.sh
@@ -328,6 +330,7 @@ chmod +x run.sh
 ```
 
 또는 직접 실행:
+
 ```bash
 ansible-playbook -i inventory.yml playbook.yml --ask-become-pass
 ```
@@ -349,6 +352,7 @@ kubectl get nodes
 ### 4.5 커스터마이징
 
 `ansible/group_vars/all.yml`:
+
 ```yaml
 # Docker 버전
 docker_version: "latest"
@@ -393,21 +397,22 @@ Frontend는 **런타임에 동적으로 Backend API URL을 가져옵니다**. �
 ### 작동 방식
 
 1. **Config API 엔드포인트**: `/api/config`
+
    - 서버 측 환경변수 `API_URL`을 클라이언트에 노출
    - Next.js API Routes 사용
-
 2. **동적 URL 로드**:
+
    - 모든 Backend API 호출 전에 `/api/config`에서 URL 가져오기
    - 첫 요청 후 캐싱하여 성능 최적화
-
 3. **환경변수 전달**:
+
    ```bash
    # Docker run
    docker run -d -e API_URL=http://YOUR_BACKEND_URL:8080 -p 3000:3000 board-frontend:v1
-   
+
    # Docker Compose
    API_URL=http://YOUR_BACKEND_URL:8080 docker-compose up -d
-   
+
    # Kubernetes
    # configmap.yaml에서 API_URL 설정
    ```
@@ -514,16 +519,16 @@ kubectl get pods -n board -o jsonpath='{.items[*].status.containerStatuses[*].st
 
 ## 📝 비교표
 
-| 특징              | docker run | docker-compose | kubernetes |
-|-------------------|-----------|----------------|------------|
-| 설정 복잡도        | 높음      | 중간           | 높음       |
-| 관리 편의성        | 낮음      | 높음           | 매우 높음  |
-| 프로덕션 준비      | 아니오    | 제한적         | 예         |
-| 스케일링          | 수동      | 제한적         | 자동       |
-| 자동 복구         | 없음      | 제한적 (재시작)| 강력       |
-| 로드밸런싱        | 수동      | 없음           | 자동       |
-| 롤링 업데이트      | 불가능    | 제한적         | 강력       |
-| 사용 사례         | 개발/테스트| 개발/소규모    | 프로덕션   |
+| 특징          | docker run  | docker-compose  | kubernetes |
+| ------------- | ----------- | --------------- | ---------- |
+| 설정 복잡도   | 높음        | 중간            | 높음       |
+| 관리 편의성   | 낮음        | 높음            | 매우 높음  |
+| 프로덕션 준비 | 아니오      | 제한적          | 예         |
+| 스케일링      | 수동        | 제한적          | 자동       |
+| 자동 복구     | 없음        | 제한적 (재시작) | 강력       |
+| 로드밸런싱    | 수동        | 없음            | 자동       |
+| 롤링 업데이트 | 불가능      | 제한적          | 강력       |
+| 사용 사례     | 개발/테스트 | 개발/소규모     | 프로덕션   |
 
 ---
 
@@ -546,4 +551,3 @@ This project is created for educational purposes.
 ## 👥 문의
 
 강의 관련 문의사항은 이슈로 남겨주세요.
-
