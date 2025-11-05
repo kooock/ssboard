@@ -60,6 +60,20 @@ Docker와 Kubernetes 강의를 위한 게시판 프로젝트가 완성되었습�
 - 자가 복구 (Self-healing)
 - 롤링 업데이트
 
+### API 프록시 아키텍처
+Frontend는 **Next.js rewrites**를 사용하여 Backend API를 프록시합니다:
+```
+브라우저 → Frontend (/api/posts)
+         ↓ (Next.js rewrites)
+         → Backend (http://backend:8080/api/posts)
+```
+
+**장점**:
+- ✅ CORS 문제 완전 해결 (same-origin)
+- ✅ 내부 서비스 이름 사용 가능 (VM IP 불필요)
+- ✅ Backend를 외부에 직접 노출하지 않음
+- ✅ 환경변수 설정 최소화
+
 ## 🚀 사용 방법
 
 ### Option 1: Docker Compose (가장 빠름)
@@ -150,7 +164,7 @@ kubectl port-forward -n board service/frontend-service 3000:3000
 
 2. **도메인/IP**:
    - `k8s/frontend/ingress.yaml`
-   - `k8s/frontend/deployment.yaml` (NEXT_PUBLIC_API_URL)
+   - `k8s/configmap.yaml` (BACKEND_URL - 내부 서비스 이름 사용)
 
 3. **리소스 할당**:
    - 각 `deployment.yaml`의 resources 섹션
@@ -187,8 +201,16 @@ kubectl logs deployment/backend -n board
 → DB 연결 확인, 환경변수 확인
 
 ### Frontend에서 API 호출 실패
-→ NEXT_PUBLIC_API_URL 확인
-→ CORS 설정 확인
+```bash
+# Frontend 프록시 확인
+curl http://localhost:3000/api/posts
+
+# Backend 직접 확인
+curl http://localhost:8080/api/posts
+```
+→ BACKEND_URL 환경변수 확인 (내부 서비스 이름: backend:8080)
+→ Next.js rewrites 설정 확인 (next.config.js)
+→ 같은 Docker network 또는 k8s namespace 확인
 
 ### Kubernetes Pod 시작 실패
 ```bash

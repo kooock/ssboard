@@ -91,24 +91,20 @@ docker run -d \
   board-backend:v1
 ```
 
+
+
 ### 1.4 Frontend 빌드 및 실행
 
 ```bash
 cd ../frontend
 docker build -t board-frontend:v1 .
 
-# IMPORTANT: Replace YOUR_VM_IP with your actual VM IP
-# For local testing, you can use host.docker.internal instead of localhost
 docker run -d \
   --name frontend \
   --network board-network \
-  -e API_URL=http://YOUR_VM_IP:8080 \
+  -e BACKEND_URL=http://backend:8080 \
   -p 3000:3000 \
   board-frontend:v1
-
-# Example with actual IP:
-# docker run -d --name frontend --network board-network \
-#   -e API_URL=http://35.190.237.182:8080 -p 3000:3000 board-frontend:v1
 ```
 
 ### 1.5 확인

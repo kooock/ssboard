@@ -112,9 +112,9 @@ docker network create board-network
 # Backend
 docker run -d --name backend --network board-network ...
 
-# Frontend (IMPORTANT: Set API_URL to your VM IP)
+# Frontend
 docker run -d --name frontend --network board-network \
-  -e API_URL=http://YOUR_VM_IP:8080 -p 3000:3000 board-frontend:v1
+  -e BACKEND_URL=http://backend:8080 -p 3000:3000 board-frontend:v1
 ```
 
 ### 2단계: Docker Compose (20분)
