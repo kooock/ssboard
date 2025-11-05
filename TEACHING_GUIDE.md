@@ -131,13 +131,18 @@ docker logs -f backend
 cd ../frontend
 docker build -t board-frontend:v1 .
 
+# IMPORTANT: Replace YOUR_VM_IP with your actual VM IP
+# Example: API_URL=http://35.190.237.182:8080
 docker run -d \
   --name frontend \
   --network board-network \
-  -e API_URL=http://localhost:8080 \
+  -e API_URL=http://YOUR_VM_IP:8080 \
   -p 3000:3000 \
   board-frontend:v1
 ```
+
+**교육 포인트**:
+> "API_URL은 VM의 실제 IP를 사용해야 합니다. localhost를 사용하면 컨테이너 내부를 가리키게 됩니다."
 
 **브라우저 열기**: `http://localhost:3000`
 
@@ -304,11 +309,14 @@ k8s/
 
 **배포 전 확인사항**:
 
-1. `k8s/configmap.yaml`에서 `API_URL` 설정
+1. **IMPORTANT**: `k8s/configmap.yaml`에서 `API_URL` 설정
    ```yaml
    data:
-     API_URL: "http://YOUR_DOMAIN_OR_IP:8080"
+     # Replace with your actual VM IP
+     API_URL: "http://35.190.237.182:8080"
    ```
+   
+   **강조**: "ConfigMap의 API_URL은 VM의 실제 IP로 설정해야 합니다!"
 
 2. Docker Hub username 업데이트
 
@@ -495,15 +503,16 @@ kubectl get svc -n board
 ### Frontend에서 API 호출 실패
 
 ```bash
-# 환경변수 확인
+# 환경변수 확인 (IMPORTANT: Should show your VM IP, not localhost)
 docker inspect frontend | grep API_URL
 kubectl describe pod <frontend-pod> -n board | grep API_URL
 
 # Runtime Config API 확인
-curl http://localhost:3000/api/config
+curl http://YOUR_VM_IP:3000/api/config
+# Expected: {"apiUrl":"http://YOUR_VM_IP:8080"}
 
 # Backend 상태 확인
-curl http://localhost:8080/actuator/health
+curl http://YOUR_VM_IP:8080/actuator/health
 kubectl port-forward -n board service/backend-service 8080:8080
 ```
 

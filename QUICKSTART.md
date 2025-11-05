@@ -25,17 +25,26 @@ Docker/Kubernetes 강의를 빠르게 시작하기 위한 가이드입니다.
 git clone <repository-url>
 cd ssboard
 
-# 2. 실행
+# 2. IMPORTANT: Set API_URL environment variable
+# Replace YOUR_VM_IP with your actual VM IP
+export API_URL=http://YOUR_VM_IP:8080
+
+# Example:
+# export API_URL=http://35.190.237.182:8080
+
+# 3. 실행
 docker-compose up -d
 
-# 3. 로그 확인
+# 4. 로그 확인
 docker-compose logs -f
 
-# 4. 브라우저에서 확인
-# http://localhost:3000
+# 5. 브라우저에서 확인
+# http://YOUR_VM_IP:3000
 ```
 
 **테스트 계정**: `admin` / `admin123`
+
+**⚠️ 주의**: `API_URL` 환경변수는 필수입니다. localhost 사용 시 문제가 발생할 수 있습니다.
 
 ---
 
@@ -107,12 +116,16 @@ docker network create board-network
 # Backend
 docker run -d --name backend --network board-network ...
 
-# Frontend
-docker run -d --name frontend --network board-network ...
+# Frontend (IMPORTANT: Set API_URL to your VM IP)
+docker run -d --name frontend --network board-network \
+  -e API_URL=http://YOUR_VM_IP:8080 -p 3000:3000 board-frontend:v1
 ```
 
 ### 2단계: Docker Compose (20분)
 ```bash
+# IMPORTANT: Set API_URL first
+export API_URL=http://YOUR_VM_IP:8080
+
 docker-compose up -d
 docker-compose ps
 docker-compose logs -f

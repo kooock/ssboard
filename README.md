@@ -97,12 +97,18 @@ docker run -d \
 cd ../frontend
 docker build -t board-frontend:v1 .
 
+# IMPORTANT: Replace YOUR_VM_IP with your actual VM IP
+# For local testing, you can use host.docker.internal instead of localhost
 docker run -d \
   --name frontend \
   --network board-network \
-  -e API_URL=http://localhost:8080 \
+  -e API_URL=http://YOUR_VM_IP:8080 \
   -p 3000:3000 \
   board-frontend:v1
+
+# Example with actual IP:
+# docker run -d --name frontend --network board-network \
+#   -e API_URL=http://35.190.237.182:8080 -p 3000:3000 board-frontend:v1
 ```
 
 ### 1.5 확인
@@ -133,6 +139,13 @@ docker network rm board-network
 ### 2.1 Docker Compose 실행
 
 ```bash
+# IMPORTANT: Set API_URL environment variable
+# Replace YOUR_VM_IP with your actual VM IP
+export API_URL=http://YOUR_VM_IP:8080
+
+# Example:
+# export API_URL=http://35.190.237.182:8080
+
 # 백그라운드 실행
 docker-compose up -d
 
@@ -141,6 +154,9 @@ docker-compose logs -f
 
 # 특정 서비스 로그만 확인
 docker-compose logs -f backend
+
+# Or set API_URL inline:
+# API_URL=http://YOUR_VM_IP:8080 docker-compose up -d
 ```
 
 ### 2.2 확인
@@ -183,12 +199,14 @@ docker login
 
 #### Kubernetes 매니페스트 수정
 
-1. `k8s/configmap.yaml`: API URL 설정 (Runtime Config API 사용)
+1. **IMPORTANT**: `k8s/configmap.yaml` - API URL 설정
 
    ```yaml
    data:
-     API_URL: "http://YOUR_DOMAIN_OR_IP:8080"
+     # Replace YOUR_VM_IP with your actual VM IP
+     API_URL: "http://35.190.237.182:8080"
    ```
+   
 2. `k8s/backend/deployment.yaml`: Docker Hub username 업데이트
 3. `k8s/frontend/deployment.yaml`: Docker Hub username 업데이트
 
@@ -407,14 +425,17 @@ Frontend는 **런타임에 동적으로 Backend API URL을 가져옵니다**. �
 3. **환경변수 전달**:
 
    ```bash
-   # Docker run
-   docker run -d -e API_URL=http://YOUR_BACKEND_URL:8080 -p 3000:3000 board-frontend:v1
+   # Docker run (Replace YOUR_VM_IP with actual IP)
+   docker run -d -e API_URL=http://YOUR_VM_IP:8080 -p 3000:3000 board-frontend:v1
 
-   # Docker Compose
-   API_URL=http://YOUR_BACKEND_URL:8080 docker-compose up -d
+   # Docker Compose (REQUIRED - no default value)
+   export API_URL=http://YOUR_VM_IP:8080
+   docker-compose up -d
+   # Or inline:
+   API_URL=http://YOUR_VM_IP:8080 docker-compose up -d
 
    # Kubernetes
-   # configmap.yaml에서 API_URL 설정
+   # Edit k8s/configmap.yaml and set API_URL to your VM IP
    ```
 
 ### 장점
@@ -428,10 +449,10 @@ Frontend는 **런타임에 동적으로 Backend API URL을 가져옵니다**. �
 
 ```bash
 # Config API 응답 확인
-curl http://localhost:3000/api/config
+curl http://YOUR_VM_IP:3000/api/config
 
 # 예상 응답:
-# {"apiUrl":"http://localhost:8080"}
+# {"apiUrl":"http://YOUR_VM_IP:8080"}
 
 # 브라우저 Console에서 확인
 # F12 → Console 탭
@@ -441,14 +462,17 @@ fetch('/api/config').then(r => r.json()).then(console.log)
 ### 다양한 환경 예시
 
 ```bash
-# 개발 환경
-docker run -d -e API_URL=http://localhost:8080 -p 3000:3000 board-frontend:v1
+# Local VM 환경 (권장)
+docker run -d -e API_URL=http://192.168.1.100:8080 -p 3000:3000 board-frontend:v1
 
-# VM/클라우드 환경
+# Cloud VM 환경
 docker run -d -e API_URL=http://35.190.237.182:8080 -p 3000:3000 board-frontend:v1
 
 # 프로덕션 환경
 docker run -d -e API_URL=https://api.production.com -p 3000:3000 board-frontend:v1
+
+# Docker Desktop (Mac/Windows) - use host.docker.internal
+docker run -d -e API_URL=http://host.docker.internal:8080 -p 3000:3000 board-frontend:v1
 ```
 
 ---
