@@ -52,7 +52,7 @@ check_command ansible-playbook || exit 1
 
 # Check SSH key
 echo ""
-if [ -f ~/.ssh/id_rsa ]; then
+if [ -f ~/.ssh/ssboard ]; then
   echo -e "${GREEN}✓ SSH key found${NC}"
 else
   echo -e "${RED}✗ SSH key not found${NC}"
