@@ -100,7 +100,7 @@ docker build -t board-frontend:v1 .
 docker run -d \
   --name frontend \
   --network board-network \
-  -e NEXT_PUBLIC_API_URL=http://localhost:8080 \
+  -e API_URL=http://localhost:8080 \
   -p 3000:3000 \
   board-frontend:v1
 ```
@@ -183,9 +183,18 @@ docker login
 
 #### Kubernetes 매니페스트 수정
 
-1. `k8s/backend/deployment.yaml`: Docker Hub username 업데이트
-2. `k8s/frontend/deployment.yaml`: Docker Hub username 및 API URL 업데이트
-3. `k8s/frontend/ingress.yaml`: 도메인 또는 IP 설정
+1. `k8s/configmap.yaml`: API URL 설정 (Runtime Config API 사용)
+   ```yaml
+   data:
+     API_URL: "http://YOUR_DOMAIN_OR_IP:8080"
+   ```
+
+2. `k8s/backend/deployment.yaml`: Docker Hub username 업데이트
+
+3. `k8s/frontend/deployment.yaml`: Docker Hub username 업데이트
+   - 환경변수는 ConfigMap에서 자동으로 가져옴
+
+4. `k8s/frontend/ingress.yaml`: 도메인 또는 IP 설정
 
 ### 3.2 배포
 
@@ -377,6 +386,68 @@ ansible-playbook -i inventory.yml playbook.yml --limit vm-01,vm-02,vm-03
 
 ---
 
+## ⚙️ Runtime Config API
+
+Frontend는 **런타임에 동적으로 Backend API URL을 가져옵니다**. 이를 통해 빌드 한 번으로 모든 환경에서 사용할 수 있습니다.
+
+### 작동 방식
+
+1. **Config API 엔드포인트**: `/api/config`
+   - 서버 측 환경변수 `API_URL`을 클라이언트에 노출
+   - Next.js API Routes 사용
+
+2. **동적 URL 로드**:
+   - 모든 Backend API 호출 전에 `/api/config`에서 URL 가져오기
+   - 첫 요청 후 캐싱하여 성능 최적화
+
+3. **환경변수 전달**:
+   ```bash
+   # Docker run
+   docker run -d -e API_URL=http://YOUR_BACKEND_URL:8080 -p 3000:3000 board-frontend:v1
+   
+   # Docker Compose
+   API_URL=http://YOUR_BACKEND_URL:8080 docker-compose up -d
+   
+   # Kubernetes
+   # configmap.yaml에서 API_URL 설정
+   ```
+
+### 장점
+
+- ✅ **환경 독립성**: 빌드 한 번으로 개발/스테이징/프로덕션 모두 사용
+- ✅ **간편한 배포**: 런타임에 환경변수만 변경하면 즉시 적용
+- ✅ **이미지 재사용**: 재빌드 없이 다른 환경에서 동일 이미지 사용
+- ✅ **자동 적용**: 모든 API 호출이 자동으로 올바른 URL 사용
+
+### 테스트
+
+```bash
+# Config API 응답 확인
+curl http://localhost:3000/api/config
+
+# 예상 응답:
+# {"apiUrl":"http://localhost:8080"}
+
+# 브라우저 Console에서 확인
+# F12 → Console 탭
+fetch('/api/config').then(r => r.json()).then(console.log)
+```
+
+### 다양한 환경 예시
+
+```bash
+# 개발 환경
+docker run -d -e API_URL=http://localhost:8080 -p 3000:3000 board-frontend:v1
+
+# VM/클라우드 환경
+docker run -d -e API_URL=http://35.190.237.182:8080 -p 3000:3000 board-frontend:v1
+
+# 프로덕션 환경
+docker run -d -e API_URL=https://api.production.com -p 3000:3000 board-frontend:v1
+```
+
+---
+
 ## 🔧 트러블슈팅
 
 ### Backend가 시작되지 않는 경우
@@ -403,7 +474,10 @@ curl http://localhost:8080/actuator/health
 docker-compose exec frontend ping backend
 
 # 환경변수 확인
-docker inspect frontend | grep NEXT_PUBLIC_API_URL
+docker inspect frontend | grep API_URL
+
+# Runtime Config API 확인
+curl http://localhost:3000/api/config
 ```
 
 ### Kubernetes Pod가 시작되지 않는 경우

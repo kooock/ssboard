@@ -134,7 +134,7 @@ docker build -t board-frontend:v1 .
 docker run -d \
   --name frontend \
   --network board-network \
-  -e NEXT_PUBLIC_API_URL=http://localhost:8080 \
+  -e API_URL=http://localhost:8080 \
   -p 3000:3000 \
   board-frontend:v1
 ```
@@ -301,6 +301,18 @@ k8s/
 ---
 
 ### 0:50-0:52 배포 (2분)
+
+**배포 전 확인사항**:
+
+1. `k8s/configmap.yaml`에서 `API_URL` 설정
+   ```yaml
+   data:
+     API_URL: "http://YOUR_DOMAIN_OR_IP:8080"
+   ```
+
+2. Docker Hub username 업데이트
+
+**배포 실행**:
 
 ```bash
 cd k8s
@@ -484,8 +496,11 @@ kubectl get svc -n board
 
 ```bash
 # 환경변수 확인
-docker inspect frontend | grep NEXT_PUBLIC_API_URL
-kubectl describe pod <frontend-pod> -n board | grep NEXT_PUBLIC_API_URL
+docker inspect frontend | grep API_URL
+kubectl describe pod <frontend-pod> -n board | grep API_URL
+
+# Runtime Config API 확인
+curl http://localhost:3000/api/config
 
 # Backend 상태 확인
 curl http://localhost:8080/actuator/health

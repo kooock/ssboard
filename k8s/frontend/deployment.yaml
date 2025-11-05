@@ -28,8 +28,11 @@ spec:
         - containerPort: 3000
           name: http
         env:
-        - name: NEXT_PUBLIC_API_URL
-          value: "http://YOUR_DOMAIN_OR_IP:8080"  # Update with actual external URL
+        - name: API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: board-config
+              key: API_URL
         resources:
           requests:
             memory: "256Mi"
